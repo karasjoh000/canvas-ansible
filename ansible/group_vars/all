@@ -1,0 +1,53 @@
+---
+
+# ---------------------------------------------------------------------------------------------------------------------
+# System administrators, who are given full firewall access.
+# ---------------------------------------------------------------------------------------------------------------------
+
+administrators:
+  - name: System Administrator
+    ipv4: 127.0.0.1
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Environment specific settings via a map (keys can be `production`, `test`, or `development`):
+#   - environment.canvas.encryption_key: High entropy random string of 20+ characters is strongly recommended.
+#   - environment.canvas.file_store: Possible values are `local` or `s3`.
+#   - environment.canvas.version: Can be the 40-character SHA-1 hash, `HEAD`, a branch name, or a tag name.
+#   - environment.postgresql: Some settings are predetermined (e.g. username is canvas).
+#   - environment.s3: Only needed if the environment.canvas.file_store is `s3`.
+# ---------------------------------------------------------------------------------------------------------------------
+
+environments:
+  production:
+    canvas:
+      admin_email: admin@example.com
+      admin_name: Organization Name
+      admin_password: password
+      encryption_key: 1234567890abcdefghijklmnopqrstuvwxyz
+      files_hostname: files.canvas.example.com
+      file_store: local
+      hostname: canvas.example.com
+      version: db41b7613d94f689a7415d0855c9652bf76b689c
+    email:
+      user:
+        address: example@example.com
+        name: Example Example
+        password: password
+        username: username
+      server:
+        authentication: plain
+        hostname: smtp.example.com
+        domain_name: example.com
+        port: 25
+    postgresql:
+      password: password
+    nginx:
+      private_key_filename: canvas.key
+      public_key_filename: canvas.pem
+    s3:
+      access_key_id: access_key
+      bucket_name: production-bucket
+      endpoint: s3.amazonaws.com
+      secret_access_key: secret_key
+
+    # TODO: Linkedin, Twitter, and others.

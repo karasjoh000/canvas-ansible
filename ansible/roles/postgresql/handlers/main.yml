@@ -1,0 +1,4 @@
+---
+
+- name: notify postgresql service
+  service: name=postgresql state={% if postgresql_installed.changed %}stopped{% else %}restarted{% endif %}

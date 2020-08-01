@@ -1,0 +1,9 @@
+# Vagrant.
+.vagrant
+
+# Ansible inventories.
+ansible/.*
+
+# Ansible certificates.
+ansible/roles/nginx/files/etc/ssl/certs/.*
+ansible/roles/nginx/files/etc/ssl/private/.*

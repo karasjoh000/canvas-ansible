@@ -1,0 +1,44 @@
+---
+
+- name: install apache related packages
+  apt: pkg={{ item }} state=latest update_cache=yes cache_valid_time=3600
+  with_items:
+     - apache2
+     - libapache2-mod-passenger
+  tags: apache
+
+- name: configure apache
+  template: src=etc/apache2/apache2.conf.j2 dest=/etc/apache2/apache2.conf
+  notify: restart apache service
+  tags: apache
+
+- name: configure apache ports
+  template: src=etc/apache2/ports.conf.j2 dest=/etc/apache2/ports.conf
+  notify: restart apache service
+  tags: apache
+
+- name: enable apache passenger mod
+  command: a2enmod passenger creates=/etc/apache2/mods-enabled/passenger.load
+  notify: restart apache service
+  tags:
+    - apache
+    - passenger
+
+- name: remove default apache sites
+  file: path={{ item }} state=absent
+  with_items:
+    - /etc/apache2/sites-enabled/000-default.conf
+    - /etc/apache2/sites-available/000-default.conf
+    - /etc/apache2/sites-available/default-ssl.conf
+  notify: restart apache service
+  tags: apache
+
+- name: configure canvas apache site
+  template: src=etc/apache2/sites-available/canvas.conf.j2 dest=/etc/apache2/sites-available/canvas.conf
+  notify: restart apache service
+  tags: apache
+
+- name: enable canvas apache site
+  command: a2ensite canvas creates=/etc/apache2/sites-enabled/canvas.conf
+  notify: restart apache service
+  tags: apache

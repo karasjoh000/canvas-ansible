@@ -1,0 +1,87 @@
+proxy_cache_path /var/cache/nginx/canvas levels=1:2 keys_zone=canvas:64m inactive=60m;
+
+upstream canvas_apache {
+{% if this_size == 'localhost' %}
+	server 127.0.0.1:8080;
+{% else %}
+{% if inventory_hostname in groups['dc0_proxy'] %}
+{% for h in groups['dc0_application'] %}
+{% if not (hostvars[h]['background_jobs_only']|default(false))|bool %}
+	server {{ hostvars[h].ansible_eth0.ipv4.address }}:8080 max_fails=4 fail_timeout=16s;
+{% endif %}
+{% endfor %}
+{% else %}
+{% for h in groups['dc1_application'] %}
+{% if not (hostvars[h]['background_jobs_only']|default(false))|bool %}
+	server {{ hostvars[h].ansible_eth0.ipv4.address }}:8080 max_fails=4 fail_timeout=16s;
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}
+
+	keepalive 32;
+}
+
+server {
+	listen 443 ssl spdy;
+	server_name {{ environments[this_environment].canvas.hostname }};
+
+	ssl_certificate /etc/ssl/certs/{{ environments[this_environment].nginx.public_key_filename }};
+	ssl_certificate_key /etc/ssl/private/{{ environments[this_environment].nginx.private_key_filename }};
+	ssl_session_cache shared:SSL:8m;
+	ssl_session_timeout 8m;
+
+	location / {
+		proxy_cache canvas;
+		proxy_cache_valid 301 404 1m;
+		proxy_cache_valid any 15s;
+		proxy_cache_min_uses 16;
+
+		proxy_pass http://canvas_apache;
+	}
+
+	location ^~ /health_check {
+{% if administrators is not none %}
+{% for a in administrators %}
+		allow {{ a.ipv4 }}/32;
+{% endfor %}
+{% endif %}
+		deny all;
+
+		proxy_pass http://canvas_apache;
+	}
+}
+
+server {
+	listen 80;
+	server_name {{ environments[this_environment].canvas.hostname }};
+	return 301 https://$server_name$request_uri;
+}
+
+{% if environments[this_environment].canvas.file_store == 'local' %}
+server {
+	listen 443 ssl spdy;
+	server_name {{ environments[this_environment].canvas.files_hostname }};
+
+	ssl_certificate /etc/ssl/certs/{{ environments[this_environment].nginx.public_key_filename }};
+	ssl_certificate_key /etc/ssl/private/{{ environments[this_environment].nginx.private_key_filename }};
+	ssl_session_cache shared:SSL:8m;
+	ssl_session_timeout 8m;
+
+	location / {
+		proxy_cache canvas;
+		proxy_cache_valid any 15m;
+		proxy_cache_min_uses 4;
+
+		proxy_pass http://canvas_apache;
+
+		expires 900;
+	}
+}
+
+server {
+	listen 80;
+	server_name {{ environments[this_environment].canvas.files_hostname }};
+	return 301 https://$server_name$request_uri;
+}
+{% endif %}

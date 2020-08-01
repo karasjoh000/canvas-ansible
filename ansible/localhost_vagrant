@@ -1,0 +1,25 @@
+[application]
+10.0.10.10 background_jobs=yes
+
+[cache]
+10.0.10.10
+
+[rdb_standby_master]
+10.0.10.10
+
+[proxy]
+10.0.10.10
+
+[rdb:children]
+rdb_standby_master
+
+[all:children]
+application
+cache
+rdb
+proxy
+
+[all:vars]
+this_datacenter=0
+this_environment=production
+this_size=localhost

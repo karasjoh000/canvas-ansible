@@ -1,0 +1,13 @@
+---
+
+- name: restart apache service
+  service: name=apache2 state=restarted
+  notify: warm up canvas apache site
+
+- name: restart canvas_init service
+  service: name=canvas_init state=restarted sleep=30
+  when: (background_jobs_only is defined and background_jobs_only|bool) or (background_jobs is defined and background_jobs|bool)
+
+- name: warm up canvas apache site
+  shell: curl -o /dev/null --insecure --silent http://127.0.0.1:8080/login
+  ignore_errors: yes

@@ -1,0 +1,9 @@
+---
+
+- name: restart apache service
+  service: name=apache2 state=restarted
+  notify: warm up canvas apache site
+
+- name: warm up canvas apache site
+  shell: curl -o /dev/null --insecure --silent http://127.0.0.1:8080/login
+  ignore_errors: yes
